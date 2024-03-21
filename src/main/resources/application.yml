@@ -1,0 +1,16 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: api-totp-demo
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/totp/
+
+management:
+  endpoints:
+    web:
+      base-path: /totp/actuator

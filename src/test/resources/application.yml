@@ -1,0 +1,7 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: api-totp-demo
