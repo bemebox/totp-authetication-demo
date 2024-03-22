@@ -9,6 +9,21 @@ spring:
   web:
     resources:
       static-locations: classpath:/static/,classpath:/totp/
+  datasource:
+    url: jdbc:h2:mem:test_db
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show-sql: true
+        format_sql: true
+  h2:
+    console:
+      enabled: true
 
 management:
   endpoints:
