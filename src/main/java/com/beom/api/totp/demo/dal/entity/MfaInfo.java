@@ -34,13 +34,14 @@ public class MfaInfo {
     @JoinColumn(name = "user_id") // Foreign key column in MfaInfo table
     private User user;
 
-    // Avoid circular reference in toString() method
+    // Avoid circular reference in toString() method with the user object
     @Override
     public String toString() {
+
         return "MfaInfo (" +
                 "id=" + id +
                 ", mfaType=" + mfaType +
-                ", secretKey='" + secretKey + '\'' +
+                ", secretKey='" + secretKey + "'" +
                 ')';
     }
 }
