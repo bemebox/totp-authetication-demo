@@ -32,6 +32,6 @@ public class User {
 
     // Establishing one-to-many relationship with MfaInfo
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<MfaInfo> mfaInfoList;
+    private List<MfaInfo> mfaInfoList = new ArrayList<>(); // Initialize the list preventing the NullPointerException when calling add on it.
 }
 
