@@ -4,6 +4,8 @@ import com.beom.api.totp.demo.dal.MFAType;
 import com.beom.api.totp.demo.dal.entity.MfaInfo;
 import com.beom.api.totp.demo.dal.entity.User;
 import com.beom.api.totp.demo.service.IUserService;
+import com.beom.api.totp.demo.service.TotpService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -11,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.Collections;
 
+@Slf4j
 @SpringBootApplication
 public class TotpAuthenticationDemoApplication implements CommandLineRunner {
 
@@ -27,9 +30,12 @@ public class TotpAuthenticationDemoApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		// Create a user when Spring Boot starts
-		User user = createUser();
-		this.userService.createUser(user);
+
+		User user = this.userService
+				.createUser(createUser())
+				.orElseThrow();
+
+		log.info(user.toString());
 	}
 
 	private User createUser() {
@@ -40,7 +46,7 @@ public class TotpAuthenticationDemoApplication implements CommandLineRunner {
 
 		MfaInfo mfaInfo = new MfaInfo();
 		mfaInfo.setMfaType(MFAType.TOTP);
-		mfaInfo.setSecretKey("123456789");
+		mfaInfo.setSecretKey(TotpService.generateSecretKey());
 		mfaInfo.setUser(user); // Set the User for MfaInfo
 
 		user.setMfaInfoList(Collections.singletonList(mfaInfo));
