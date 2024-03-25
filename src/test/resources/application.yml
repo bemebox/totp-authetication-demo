@@ -5,3 +5,13 @@ server:
 spring:
   application:
     name: api-totp-demo
+
+beom:
+  payload:
+    dto:
+      totp:
+        request:
+          path: payload/TotpRequest.json
+      qrcode:
+        response:
+          path: payload/QRCodeResponse.json

@@ -10,6 +10,8 @@ This microservice API is responsible generate a TOTP QRCode and validate a given
 * [Spring](https://spring.io)
 * [Spring Boot](https://spring.io/projects/spring-boot)
 * [Spring Boot Actuator](https://docs.spring.io/spring-boot/docs/current/actuator-api/htmlsingle/)
+* [TOTP](https://datatracker.ietf.org/doc/html/rfc6238)
+* [H2 Database](https://www.h2database.com/html/main.html)
 
 ## Getting Started
 
