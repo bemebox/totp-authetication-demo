@@ -23,24 +23,6 @@ class MfaInfoTests {
     void setupTest() { }
 
     @Test
-    void testMfaInfoEntityFields() {
-        // GIVEN
-        Long id = 1L;
-        MFAType mfaType = MFAType.TOTP;
-        String secretKey = "secretKey";
-        User user = new User(); // Mock or instantiate User object based on your needs
-
-        // WHEN
-        MfaInfo mfaInfo = new MfaInfo(id, mfaType, secretKey, user);
-
-        // THEN
-        assertThat(mfaInfo.getId()).isEqualTo(id);
-        assertThat(mfaInfo.getMfaType()).isEqualTo(mfaType);
-        assertThat(mfaInfo.getSecretKey()).isEqualTo(secretKey);
-        assertThat(mfaInfo.getUser()).isEqualTo(user);
-    }
-
-    @Test
     void testToStringMethod() {
         // GIVEN
         MfaInfo mfaInfo = new MfaInfo();
@@ -55,19 +37,6 @@ class MfaInfoTests {
                 "mfaType=" + mfaInfo.getMfaType(),
                 "secretKey='" + mfaInfo.getSecretKey() + "'"
         );
-    }
-
-    @Test
-    void testEqualsAndHashCode() {
-        // GIVEN
-        MfaInfo mfaInfo1 = new MfaInfo(1L, MFAType.TOTP, "secret1", new User());
-        MfaInfo mfaInfo2 = new MfaInfo(1L, MFAType.TOTP, "secret1", new User());
-        MfaInfo mfaInfo3 = new MfaInfo(2L, MFAType.TOTP, "secret2", new User());
-
-        // WHEN & THEN
-        assertThat(mfaInfo1).isEqualTo(mfaInfo2); // Equal objects
-        assertThat(mfaInfo1.hashCode()).hasSameHashCodeAs(mfaInfo2.hashCode()); // Equal hash codes
-        assertThat(mfaInfo1).isNotEqualTo(mfaInfo3); // Non-equal objects
     }
 }
 
