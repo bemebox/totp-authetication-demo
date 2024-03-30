@@ -29,7 +29,7 @@ public class TotpAuthenticationDemoApplication implements CommandLineRunner {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
+	public void run(String... args) {
 
 		User user = this.userService
 				.createUser(createUser())

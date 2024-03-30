@@ -4,7 +4,7 @@ package com.beom.api.totp.demo.exception;
  * Thrown when user not found exception error occurs in the application.
  *
  * @author beom
- * @since: 2024/03/16
+ * @since 2024/03/16
  * @see RuntimeException
  */
 public class UserNotFoundException extends RuntimeException {

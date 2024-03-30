@@ -4,7 +4,7 @@ package com.beom.api.totp.demo.exception;
  * Thrown when an exception error occurs when generating the QRCode image.
  *
  * @author beom
- * @since: 2024/03/16
+ * @since 2024/03/16
  * @see RuntimeException
  */
 public class GenerateQRCodeImageException extends RuntimeException {
