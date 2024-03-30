@@ -1,0 +1,30 @@
+=== API Health Check
+
+This API endpoint allows to tell if the API is up and running properly or if it's stop or with there are any issues. +
+A successful response with a status code 200 OK and a status message 'UP' indicates that the API is up and running properly.
+
+`+GET /api/totp/actuator/health+`
+
+==== Health Check OK
+
+===== Example request
+
+[source,http,options="nowrap"]
+----
+GET /api/totp/actuator/health HTTP/1.1
+Host: localhost:8762
+
+----
+
+===== Example response
+
+[source,http,options="nowrap"]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 21
+
+{
+  "status" : "UP"
+}
+----

@@ -1,0 +1,95 @@
+=== Generate TOTP QRCode Image
+
+Thís API endpoint allows to create a TOTP QR code image, containing Time-based One-Time Password (TOTP) authentication details for a specific user. +
+It takes the username and issuer name parameters, and returns the base64-encoded representation image.
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-valid-inputs-when-generate-qr-code-base64-image-then-expect-ok/auto-method-path.adoc[]
+
+==== Generate the QRCode Image With Success
+
+Given a valid username and issuer name, returns the base64-encoded TOTP QRCode representation image. +
+The TOTP QRCode Image allows the users to easily configure their authenticator app by scanning the QR code, instead of manually entering the secret key. +
+This improves user experience and security by simplifying the setup process and reducing the likelihood of input errors.
+
+
+===== Path parameters
+include::{snippets}/generate-totp-qr-code-image-tests/given-valid-inputs-when-generate-qr-code-base64-image-then-expect-ok/auto-path-parameters.adoc[]
+
+===== Query parameters
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-valid-inputs-when-generate-qr-code-base64-image-then-expect-ok/auto-request-parameters.adoc[]
+
+===== Request fields
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-valid-inputs-when-generate-qr-code-base64-image-then-expect-ok/auto-request-fields.adoc[]
+
+===== Response fields
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-valid-inputs-when-generate-qr-code-base64-image-then-expect-ok/auto-response-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-valid-inputs-when-generate-qr-code-base64-image-then-expect-ok/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-valid-inputs-when-generate-qr-code-base64-image-then-expect-ok/http-response.adoc[]
+
+
+
+==== Generate the QRCode Image With Invalid Parameter
+
+When requesting the TOTP QRCode generation through the API, if invalid parameters are provided, the API will respond with "400 Bad Request" error. +
+This may happen when the request parameters do not contain the expected value.
+
+===== Path parameters
+include::{snippets}/generate-totp-qr-code-image-tests/given-invalid-user-without-mfa-info-when-generate-qr-code-base64-image-then-expect-bad-request/auto-path-parameters.adoc[]
+
+===== Query parameters
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-invalid-user-without-mfa-info-when-generate-qr-code-base64-image-then-expect-bad-request/auto-request-parameters.adoc[]
+
+===== Request fields
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-invalid-user-without-mfa-info-when-generate-qr-code-base64-image-then-expect-bad-request/auto-request-fields.adoc[]
+
+===== Response fields
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-invalid-user-without-mfa-info-when-generate-qr-code-base64-image-then-expect-bad-request/auto-response-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-invalid-user-without-mfa-info-when-generate-qr-code-base64-image-then-expect-bad-request/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/generate-totp-qr-code-image-tests/given-invalid-user-without-mfa-info-when-generate-qr-code-base64-image-then-expect-bad-request/http-response.adoc[]
+
+
+==== Generate the QRCode Image When Unknown error occurs
+
+During the process of generating the TOTP QRCode image, if an unexpected or unknown error occurs, the API will return an "unknown error." +
+This indicates that the API encountered an issue that could not be precisely identified or categorized within its regular error handling.
+
+===== Path parameters
+include::{snippets}/generate-totp-qr-code-image-tests/when-generate-qr-code-image-exception-occurs-will-generate-qr-code-base64-image-then-expect-internal-server-error/auto-path-parameters.adoc[]
+
+===== Query parameters
+
+include::{snippets}/generate-totp-qr-code-image-tests/when-generate-qr-code-image-exception-occurs-will-generate-qr-code-base64-image-then-expect-internal-server-error/auto-request-parameters.adoc[]
+
+===== Request fields
+
+include::{snippets}/generate-totp-qr-code-image-tests/when-generate-qr-code-image-exception-occurs-will-generate-qr-code-base64-image-then-expect-internal-server-error/auto-request-fields.adoc[]
+
+===== Response fields
+
+include::{snippets}/generate-totp-qr-code-image-tests/when-generate-qr-code-image-exception-occurs-will-generate-qr-code-base64-image-then-expect-internal-server-error/auto-response-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/generate-totp-qr-code-image-tests/when-generate-qr-code-image-exception-occurs-will-generate-qr-code-base64-image-then-expect-internal-server-error/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/generate-totp-qr-code-image-tests/when-generate-qr-code-image-exception-occurs-will-generate-qr-code-base64-image-then-expect-internal-server-error/http-response.adoc[]

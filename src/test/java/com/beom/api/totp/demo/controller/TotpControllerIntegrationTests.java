@@ -1,5 +1,8 @@
 package com.beom.api.totp.demo.controller;
 
+import capital.scalable.restdocs.AutoDocumentation;
+import capital.scalable.restdocs.jackson.JacksonResultHandlers;
+import capital.scalable.restdocs.response.ResponseModifyingPreprocessors;
 import com.beom.api.totp.demo.dal.dto.QRCodeResponse;
 import com.beom.api.totp.demo.dal.dto.TotpRequest;
 import com.beom.api.totp.demo.exception.GenerateQRCodeImageException;
@@ -9,17 +12,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.cli.CliDocumentation;
+import org.springframework.restdocs.http.HttpDocumentation;
+import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
+import org.springframework.restdocs.operation.preprocess.Preprocessors;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.WebApplicationContext;
@@ -30,6 +44,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+
 
 /**
  * {@link TotpController} integration tests class
@@ -37,8 +53,10 @@ import static org.mockito.Mockito.when;
  * @author beom
  * @since 2024/03/16
  */
+@ExtendWith({RestDocumentationExtension.class, SpringExtension.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureRestDocs(outputDir = "target/generated-snippets")
 class TotpControllerIntegrationTests {
 
     private static final String CONTEXT_PATH = "/api";
@@ -49,7 +67,7 @@ class TotpControllerIntegrationTests {
 
     private final WebApplicationContext webApplicationContext;
     private final ObjectMapper objectMapper;
-    private final MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @Value("${beom.payload.dto.totp.request.path}")
     private String totpRequestPayloadPath;
@@ -74,7 +92,37 @@ class TotpControllerIntegrationTests {
      * method called before each test execution
      */
     @BeforeEach
-    void setupTest() throws Exception {
+    void setupTest(RestDocumentationContextProvider restDocumentation) throws Exception {
+
+        // to automatically generate the rest documentation
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
+                .apply(documentationConfiguration(restDocumentation))
+                .alwaysDo(JacksonResultHandlers.prepareJackson(objectMapper))
+                .alwaysDo(MockMvcRestDocumentation.document("{class-name}/{method-name}",
+                        Preprocessors.preprocessRequest(),
+                        Preprocessors.preprocessResponse(
+                                ResponseModifyingPreprocessors.replaceBinaryContent(),
+                                ResponseModifyingPreprocessors.limitJsonArrayLength(objectMapper),
+                                Preprocessors.prettyPrint())))
+                .apply(MockMvcRestDocumentation.documentationConfiguration(restDocumentation)
+                        .uris()
+                        .withScheme("http")
+                        .withHost("localhost")
+                        .withPort(8080)
+                        .and().snippets()
+                        .withDefaults(CliDocumentation.curlRequest(),
+                                HttpDocumentation.httpRequest(),
+                                HttpDocumentation.httpResponse(),
+                                AutoDocumentation.requestFields(),
+                                AutoDocumentation.responseFields(),
+                                AutoDocumentation.pathParameters(),
+                                AutoDocumentation.requestParameters(),
+                                AutoDocumentation.description(),
+                                AutoDocumentation.methodAndPath(),
+                                AutoDocumentation.section()))
+                .build();
+
         assertThat(webApplicationContext)
                 .as("webApplicationContext cannot be null!")
                 .isNotNull();
@@ -102,77 +150,81 @@ class TotpControllerIntegrationTests {
                 .isNotNull();
     }
 
-    @Test
-    void givenValidInputsWhenGenerateQRCodeBase64ImageThenExpectOk() throws Exception {
-        // GIVEN
-        String qrCode64Image = qrCodeResponse.qrCode();
+    @Nested
+    class GenerateTotpQRCodeImageTests {
 
-        // WHEN
-        when(this.totpService.generateQRCodeBase64Image(anyString(), anyString())).thenReturn(qrCode64Image);
+        @Test
+        void givenValidInputsWhenGenerateQRCodeBase64ImageThenExpectOk() throws Exception {
+            // GIVEN
+            String qrCode64Image = qrCodeResponse.qrCode();
 
-        // THEN
-        mockMvc.perform(MockMvcRequestBuilders.post(GET_QRCODE_IMAGE_ROOT_ENDPOINT)
-                        .contextPath(CONTEXT_PATH)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(totpRequest)))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.qr_code").value(qrCodeResponse.qrCode()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.issuer").value(qrCodeResponse.issuer()));
+            // WHEN
+            when(totpService.generateQRCodeBase64Image(anyString(), anyString())).thenReturn(qrCode64Image);
 
-        verify(totpService).generateQRCodeBase64Image(anyString(), anyString());
-    }
+            // THEN
+            mockMvc.perform(MockMvcRequestBuilders.post(GET_QRCODE_IMAGE_ROOT_ENDPOINT)
+                            .contextPath(CONTEXT_PATH)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(totpRequest)))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.qr_code").value(qrCodeResponse.qrCode()))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.issuer").value(qrCodeResponse.issuer()));
 
-    @Test
-    void givenInvalidUserWithoutMfaInfoWhenGenerateQRCodeBase64ImageThenExpectBadRequest() throws Exception {
-        // GIVEN
-        String username = "testuser";
+            verify(totpService).generateQRCodeBase64Image(anyString(), anyString());
+        }
 
-        // WHEN
-        when(totpService.generateQRCodeBase64Image(anyString(), anyString()))
-                .thenThrow(new InvalidMfaTypeException("No MFA type added to the user " + username));
+        @Test
+        void givenInvalidUserWithoutMfaInfoWhenGenerateQRCodeBase64ImageThenExpectBadRequest() throws Exception {
+            // GIVEN
+            String username = "testuser";
 
-        // THEN
-        mockMvc.perform(MockMvcRequestBuilders.post(GET_QRCODE_IMAGE_ROOT_ENDPOINT)
-                        .contextPath(CONTEXT_PATH)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(totpRequest)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors.length()").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors.[0]").value("No MFA type added to the user " + username))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
+            // WHEN
+            when(totpService.generateQRCodeBase64Image(anyString(), anyString()))
+                    .thenThrow(new InvalidMfaTypeException("No MFA type added to the user " + username));
 
-        verify(totpService).generateQRCodeBase64Image(anyString(), anyString());
-    }
+            // THEN
+            mockMvc.perform(MockMvcRequestBuilders.post(GET_QRCODE_IMAGE_ROOT_ENDPOINT)
+                            .contextPath(CONTEXT_PATH)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(totpRequest)))
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                    .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors").isArray())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.length()").value(1))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.[0]").value("No MFA type added to the user " + username))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
 
-    @Test
-    void whenGenerateQRCodeImageExceptionOccursWillGenerateQRCodeBase64ImageThenExpectInternalServerError() throws Exception {
-        // GIVEN
+            verify(totpService).generateQRCodeBase64Image(anyString(), anyString());
+        }
 
-        // WHEN
-        when(totpService.generateQRCodeBase64Image(anyString(), anyString()))
-                .thenThrow(new GenerateQRCodeImageException("Unable to generate the TOTP QRCode base64 image."));
+        @Test
+        void whenGenerateQRCodeImageExceptionOccursWillGenerateQRCodeBase64ImageThenExpectInternalServerError() throws Exception {
+            // GIVEN
 
-        // THEN
-        mockMvc.perform(MockMvcRequestBuilders.post(GET_QRCODE_IMAGE_ROOT_ENDPOINT)
-                        .contextPath(CONTEXT_PATH)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(totpRequest)))
-                .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.INTERNAL_SERVER_ERROR.value()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors.length()").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errors.[0]").value("Unexpected error has occurred."))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
+            // WHEN
+            when(totpService.generateQRCodeBase64Image(anyString(), anyString()))
+                    .thenThrow(new GenerateQRCodeImageException("Unable to generate the TOTP QRCode base64 image."));
 
-        verify(totpService).generateQRCodeBase64Image(anyString(), anyString());
+            // THEN
+            mockMvc.perform(MockMvcRequestBuilders.post(GET_QRCODE_IMAGE_ROOT_ENDPOINT)
+                            .contextPath(CONTEXT_PATH)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(totpRequest)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+                    .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.INTERNAL_SERVER_ERROR.value()))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors").isArray())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.length()").value(1))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.[0]").value("Unexpected error has occurred."))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
+
+            verify(totpService).generateQRCodeBase64Image(anyString(), anyString());
+        }
     }
 
     /**

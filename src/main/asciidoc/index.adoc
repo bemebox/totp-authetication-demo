@@ -1,0 +1,25 @@
+:sectnums:
+:sectnumlevels: 3
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:pdf-page-layout: docs
+
+= TOTP API
+
+== Description
+A Time-based One-Time Password (TOTP) API provides functionality for generating TOTP QRCode image and validating Time-based One-Time passwords (TOTPs) based on a shared secret key and the current time. +
+  +
+It generate a QRCode containing the TOTP configuration details, such as the issuer name, username, and secret key. +
+The QR code is used to facilitate the setup of multi-factor authentication (MFA) in mobile authenticator apps. +
+  +
+The API also verifies TOTPs submitted by users against the expected TOTP generated, using the shared secret key and the current time. If the TOTP matches, the MFA authentication is successful made. +
+  +
+MFA is a critical security measure that significantly strengthens authentication mechanisms and reduces the risk of unauthorized access and data breaches.
+
+== API Documentation
+
+include::health-check.adoc[]
+
+include::generate-totp-qrcode-image.adoc[]
