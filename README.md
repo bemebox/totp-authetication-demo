@@ -1,7 +1,9 @@
 # TOTP Demo API
 
 It's a Java 17 microservice API demo project, build with Spring Boot 3. <br />
-This microservice API is responsible generate a TOTP QRCode and validate a given TOTP code.
+This microservice API is responsible to generate a TOTP QRCode and validate a given TOTP code.
+
+The program creates a user in memory, with a generated secret key used to generate the TOTP.
 
 ### Version
 1.0.0
