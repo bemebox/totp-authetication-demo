@@ -3,10 +3,14 @@ package com.beom.api.totp.demo.controller;
 import capital.scalable.restdocs.AutoDocumentation;
 import capital.scalable.restdocs.jackson.JacksonResultHandlers;
 import capital.scalable.restdocs.response.ResponseModifyingPreprocessors;
+import com.beom.api.totp.demo.dal.dto.QRCodeRequest;
 import com.beom.api.totp.demo.dal.dto.QRCodeResponse;
 import com.beom.api.totp.demo.dal.dto.TotpRequest;
+import com.beom.api.totp.demo.dal.dto.TotpResponse;
 import com.beom.api.totp.demo.exception.GenerateQRCodeImageException;
 import com.beom.api.totp.demo.exception.InvalidMfaTypeException;
+import com.beom.api.totp.demo.exception.TotpValidationException;
+import com.beom.api.totp.demo.exception.UserNotFoundException;
 import com.beom.api.totp.demo.service.ITotpService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -61,6 +65,7 @@ class TotpControllerIntegrationTests {
 
     private static final String CONTEXT_PATH = "/api";
     private static final String GET_QRCODE_IMAGE_ROOT_ENDPOINT = "/api/v1.0/totp/JohnDoe/qrcode";
+    private static final String VALIDATE_TOTP_ROOT_ENDPOINT = "/api/v1.0/totp/{username}/validate";
 
     @MockBean
     private ITotpService totpService;
@@ -69,12 +74,21 @@ class TotpControllerIntegrationTests {
     private final ObjectMapper objectMapper;
     private MockMvc mockMvc;
 
-    @Value("${beom.payload.dto.totp.request.path}")
-    private String totpRequestPayloadPath;
-    private TotpRequest totpRequest;
+    @Value("${beom.payload.dto.qrcode.request.path}")
+    private String qrCodeRequestPayloadPath;
+    private QRCodeRequest qrCodeRequest;
+    
     @Value("${beom.payload.dto.qrcode.response.path}")
     private String qrCodeResponsePayloadPath;
     private QRCodeResponse qrCodeResponse;
+
+    @Value("${beom.payload.dto.totp.request.path}")
+    private String totpRequestPayloadPath;
+    private TotpRequest totpRequest;
+
+    @Value("${beom.payload.dto.totp.response.path}")
+    private String totpResponsePayloadPath;
+    private TotpResponse totpResponse;
 
     /**
      * constructor
@@ -139,14 +153,24 @@ class TotpControllerIntegrationTests {
                 .as("totpService cannot be null")
                 .isNotNull();
 
-        this.totpRequest = getPayloadContent(totpRequestPayloadPath, TotpRequest.class);
-        assertThat(totpRequest)
-                .as("totpRequest cannot be null")
+        this.qrCodeRequest = getPayloadContent(qrCodeRequestPayloadPath, QRCodeRequest.class);
+        assertThat(qrCodeRequest)
+                .as("qrCodeRequest cannot be null")
                 .isNotNull();
 
         this.qrCodeResponse = getPayloadContent(qrCodeResponsePayloadPath, QRCodeResponse.class);
         assertThat(qrCodeResponse)
                 .as("qrCodeResponse cannot be null")
+                .isNotNull();
+
+        this.totpRequest = getPayloadContent(totpRequestPayloadPath, TotpRequest.class);
+        assertThat(totpRequest)
+                .as("totpRequest cannot be null")
+                .isNotNull();
+
+        this.totpResponse = getPayloadContent(totpResponsePayloadPath, TotpResponse.class);
+        assertThat(totpResponse)
+                .as("totpResponse cannot be null")
                 .isNotNull();
     }
 
@@ -166,7 +190,7 @@ class TotpControllerIntegrationTests {
                             .contextPath(CONTEXT_PATH)
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(totpRequest)))
+                            .content(objectMapper.writeValueAsString(qrCodeRequest)))
                     .andExpect(MockMvcResultMatchers.status().isOk())
                     .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.jsonPath("$.qr_code").value(qrCodeResponse.qrCode()))
@@ -189,7 +213,7 @@ class TotpControllerIntegrationTests {
                             .contextPath(CONTEXT_PATH)
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(totpRequest)))
+                            .content(objectMapper.writeValueAsString(qrCodeRequest)))
                     .andExpect(MockMvcResultMatchers.status().isBadRequest())
                     .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
@@ -214,7 +238,7 @@ class TotpControllerIntegrationTests {
                             .contextPath(CONTEXT_PATH)
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(totpRequest)))
+                            .content(objectMapper.writeValueAsString(qrCodeRequest)))
                     .andExpect(MockMvcResultMatchers.status().isInternalServerError())
                     .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.INTERNAL_SERVER_ERROR.value()))
@@ -224,6 +248,83 @@ class TotpControllerIntegrationTests {
                     .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
 
             verify(totpService).generateQRCodeBase64Image(anyString(), anyString());
+        }
+    }
+
+    @Nested
+    class ValidateTotpTests {
+        @Test
+        void givenValidInputsWhenValidateTotpThenExpectOk() throws Exception {
+            // GIVEN
+            String username = "JohnDoe";
+
+            // WHEN
+            when(totpService.validateTOTP(username, totpRequest.code())).thenReturn(true);
+
+            // THEN
+            mockMvc.perform(MockMvcRequestBuilders.post(VALIDATE_TOTP_ROOT_ENDPOINT, username)
+                            .contextPath(CONTEXT_PATH)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(totpRequest)))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.issuer").value(totpResponse.issuer()))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.valid").value(totpResponse.valid()));
+
+            verify(totpService).validateTOTP(username, totpRequest.code());
+        }
+
+        @Test
+        void givenInvalidUsernameWhenValidateTOTPThenExpectBadRequest() throws Exception {
+            // GIVEN
+            String username = "testuser";
+
+            // WHEN
+            when(totpService.validateTOTP(username, totpRequest.code()))
+                    .thenThrow(new UserNotFoundException("No user found by the username: " + username));
+
+            // THEN
+            mockMvc.perform(MockMvcRequestBuilders.post(VALIDATE_TOTP_ROOT_ENDPOINT, username)
+                            .contextPath(CONTEXT_PATH)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(totpRequest)))
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                    .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors").isArray())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.length()").value(1))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.[0]").value("No user found by the username: " + username))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
+
+            verify(totpService).validateTOTP(username, totpRequest.code());
+        }
+
+        @Test
+        void whenTotpValidationExceptionOccursWillValidateTOTPThenExpectInternalServerError() throws Exception {
+            // GIVEN
+            String username = "JaneDoe";
+
+            // WHEN
+            when(totpService.validateTOTP(username, totpRequest.code()))
+                    .thenThrow(new GenerateQRCodeImageException("Unable to validate the TOTP code."));
+
+            // THEN
+            mockMvc.perform(MockMvcRequestBuilders.post(VALIDATE_TOTP_ROOT_ENDPOINT, username)
+                            .contextPath(CONTEXT_PATH)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(totpRequest)))
+                    .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+                    .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.INTERNAL_SERVER_ERROR.value()))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors").isArray())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.length()").value(1))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.errors.[0]").value("Unexpected error has occurred."))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.timestamp").exists());
+
+            verify(totpService).validateTOTP(username, totpRequest.code());
         }
     }
 

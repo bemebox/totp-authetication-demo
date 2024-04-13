@@ -17,4 +17,12 @@ public interface ITotpService {
      */
     String generateQRCodeBase64Image(String issuer, String username);
 
+    /**
+     * Validates a Time-based One-Time Password (TOTP) against a given secret key.
+     *
+     * @param username The username to generate the TOTP for.
+     * @param inputTOTP The TOTP input provided by the user for validation.
+     * @return True if the input TOTP is valid for the given secret key, false otherwise.
+     */
+    boolean validateTOTP(String username, String inputTOTP);
 }

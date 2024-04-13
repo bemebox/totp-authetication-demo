@@ -23,3 +23,5 @@ MFA is a critical security measure that significantly strengthens authentication
 include::health-check.adoc[]
 
 include::generate-totp-qrcode-image.adoc[]
+
+include::validate-totp.adoc[]

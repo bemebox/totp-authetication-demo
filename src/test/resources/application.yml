@@ -9,9 +9,13 @@ spring:
 beom:
   payload:
     dto:
+      qrcode:
+        request:
+          path: payload/QRCodeRequest.json
+        response:
+          path: payload/QRCodeResponse.json
       totp:
         request:
           path: payload/TotpRequest.json
-      qrcode:
         response:
-          path: payload/QRCodeResponse.json
+          path: payload/TotpResponse.json

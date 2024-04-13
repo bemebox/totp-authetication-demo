@@ -1,0 +1,96 @@
+{
+	"info": {
+		"_postman_id": "23acb7c2-40f7-4299-919d-9dc8e32ef987",
+		"name": "TOTP DEMO API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "5075209"
+	},
+	"item": [
+		{
+			"name": "HEALTH CHECK",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/totp/actuator/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"totp",
+						"actuator",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GENERATE QRCODE IMAGE",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"issuer\":\"iam-site\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/v1.0/totp/JohnDoe/qrcode",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"v1.0",
+						"totp",
+						"JohnDoe",
+						"qrcode"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "VALIDATE TOTP CODE",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"issuer\":\"iam-site\",\n    \"code\": \"123456\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/v1.0/totp/JohnDoe/validate",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"v1.0",
+						"totp",
+						"JohnDoe",
+						"validate"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

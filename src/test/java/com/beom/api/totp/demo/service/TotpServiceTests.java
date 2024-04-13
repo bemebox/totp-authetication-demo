@@ -3,14 +3,12 @@ package com.beom.api.totp.demo.service;
 import com.beom.api.totp.demo.dal.MFAType;
 import com.beom.api.totp.demo.dal.entity.MfaInfo;
 import com.beom.api.totp.demo.dal.entity.User;
-import com.beom.api.totp.demo.exception.GenerateQRCodeImageException;
-import com.beom.api.totp.demo.exception.InvalidMfaTypeException;
-import com.beom.api.totp.demo.exception.InvalidSecretKeyException;
-import com.beom.api.totp.demo.exception.UserNotFoundException;
+import com.beom.api.totp.demo.exception.*;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Collections;
@@ -19,6 +17,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -202,5 +202,170 @@ class TotpServiceTests {
         assertThatThrownBy(() -> this.totpService.generateQRCodeBase64Image(issuer, username))
                 .isInstanceOf(GenerateQRCodeImageException.class)
                 .hasMessage("Unable to generate the TOTP QRCode base64 image.");
+    }
+
+    @Test
+    void givenValidTOTPCodeWhenValidateTOTPThenReturnTrue() {
+        // GIVEN
+        String username = "testuser";
+        String totpCode = "762755";
+        String secretKey = "secretKey";
+
+        MfaInfo mfaInfo = new MfaInfo();
+        mfaInfo.setMfaType(MFAType.TOTP);
+        mfaInfo.setSecretKey(secretKey);
+
+        User user = new User();
+        user.setMfaInfoList(Collections.singletonList(mfaInfo));
+
+        // WHEN
+        TotpService totpServiceMock = Mockito.spy(new TotpService(userService));
+        Mockito.doReturn(1615228800L).when(totpServiceMock).getCurrentEpochSecond();
+        when(userService.getUserByUsername(username)).thenReturn(Optional.of(user));
+
+        boolean isValid = totpServiceMock.validateTOTP(username, totpCode);
+
+        // THEN
+        assertThat(isValid)
+                .as("TOTP code must be valid.")
+                .isTrue();
+
+        verify(userService).getUserByUsername(username);
+    }
+
+    @Test
+    void givenNullUsernameWhenValidateTOTPThenThrowIllegalArgumentException() {
+        // GIVEN
+        String totpCode = "123456";
+
+        // WHEN & THEN
+        assertThatThrownBy(() -> this.totpService.validateTOTP(null, totpCode))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The secret key cannot be null or empty.");
+
+        verify(userService, never()).getUserByUsername(anyString());
+    }
+
+    @Test
+    void givenNullTOTPCodeWhenValidateTOTPThenThrowIllegalArgumentException() {
+        // GIVEN
+        String username = "testuser";
+
+        // WHEN & THEN
+        assertThatThrownBy(() -> this.totpService.validateTOTP(username, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The TOTP code cannot be null or empty.");
+
+        verify(userService, never()).getUserByUsername(anyString());
+    }
+
+    @Test
+    void givenInvalidUsernameWhenValidateTOTPThenThrowUserNotFoundException() {
+        // GIVEN
+        String username = "nonexistentuser";
+        String totpCode = "123456";
+
+        // WHEN
+        when(userService.getUserByUsername(username)).thenReturn(Optional.empty());
+
+        // THEN
+        assertThatThrownBy(() -> this.totpService.validateTOTP(username, totpCode))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage("No user found by the username: " + username);
+
+        verify(userService).getUserByUsername(username);
+    }
+
+    @Test
+    void givenNullSecretKeyWhenValidateTOTPThenThrowIllegalArgumentException() {
+        // GIVEN
+        String username = "testuser";
+        String totpCode = "123456";
+
+        MfaInfo mfaInfo = new MfaInfo();
+        mfaInfo.setMfaType(MFAType.TOTP);
+        mfaInfo.setSecretKey(null);
+
+        User user = new User();
+        user.setMfaInfoList(Collections.singletonList(mfaInfo));
+
+        // WHEN
+        when(userService.getUserByUsername(username)).thenReturn(Optional.of(user));
+
+        // THEN
+        assertThatThrownBy(() -> this.totpService.validateTOTP(username, totpCode))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format("The secret key of the %s username cannot be null or empty.", username));
+
+        verify(userService).getUserByUsername(username);
+    }
+
+    @Test
+    void givenInvalidMFATypeWhenValidateTOTPThenThrowInvalidMfaTypeException() {
+        // GIVEN
+        String username = "testuser";
+        String totpCode = "123456";
+        String secretKey = "secretKey";
+
+        MfaInfo mfaInfo = new MfaInfo();
+        mfaInfo.setMfaType(MFAType.SMS);
+        mfaInfo.setSecretKey(secretKey);
+
+        User user = new User();
+        user.setMfaInfoList(Collections.singletonList(mfaInfo));
+
+        // WHEN
+        when(userService.getUserByUsername(username)).thenReturn(Optional.of(user));
+
+        // THEN
+        assertThatThrownBy(() -> this.totpService.validateTOTP(username, totpCode))
+                .isInstanceOf(InvalidMfaTypeException.class)
+                .hasMessage("No TOTP MFA type added for the user " + username);
+
+        verify(userService).getUserByUsername(username);
+    }
+
+    @Test
+    void givenInvalidTOTPCodeWhenValidateTOTPThenReturnFalse() {
+        // GIVEN
+        String username = "testuser";
+        String totpCode = "123abc"; // Invalid TOTP code
+        String secretKey = "secretKey";
+
+        MfaInfo mfaInfo = new MfaInfo();
+        mfaInfo.setMfaType(MFAType.TOTP);
+        mfaInfo.setSecretKey(secretKey);
+
+        User user = new User();
+        user.setMfaInfoList(Collections.singletonList(mfaInfo));
+
+        // WHEN
+        when(userService.getUserByUsername(username)).thenReturn(Optional.of(user));
+
+        boolean isValid = totpService.validateTOTP(username, totpCode);
+
+        // THEN
+        assertThat(isValid)
+                .as("TOTP code must be invalid.")
+                .isFalse();
+
+        verify(userService).getUserByUsername(username);
+    }
+
+    @Test
+    void givenExceptionWhenValidateTOTPThenThrownTotpValidationException() {
+        // GIVEN
+        String username = "testuser";
+        String totpCode = "123456";
+
+        // WHEN
+        when(userService.getUserByUsername(username)).thenThrow(RuntimeException.class);
+
+        // THEN
+        assertThatThrownBy(() -> this.totpService.validateTOTP(username, totpCode))
+                .isInstanceOf(TotpValidationException.class)
+                .hasMessage("Unable to validate the TOTP code.");
+
+        verify(userService).getUserByUsername(username);
     }
 }

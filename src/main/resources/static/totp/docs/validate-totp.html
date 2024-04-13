@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.18">
-<title>Generate TOTP QRCode Image</title>
+<title>Validate TOTP Code</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -441,20 +441,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="content">
 <div class="sect2">
-<h3 id="_generate_totp_qrcode_image">Generate TOTP QRCode Image</h3>
+<h3 id="_validate_totp_code">Validate TOTP Code</h3>
 <div class="paragraph">
-<p>Thís API endpoint allows to create a TOTP QR code image, containing Time-based One-Time Password (TOTP) authentication details for a specific user.<br>
-It takes the username and issuer name parameters, and returns the base64-encoded representation image.</p>
+<p>Thís API endpoint allows to validate a given Time-based One-Time Password (TOTP) code, for a specific user.<br>
+It takes the username, issuer name and the TOTP code parameters, and returns True if the TOTP is valid, if not return false.</p>
 </div>
 <div class="paragraph">
-<p><code>POST /v1.0/totp/{username}/qrcode</code></p>
+<p><code>POST /v1.0/totp/{username}/validate</code></p>
 </div>
 <div class="sect3">
-<h4 id="_generate_the_qrcode_image_with_success">Generate the QRCode Image With Success</h4>
+<h4 id="_validate_totp_with_success">Validate TOTP With Success</h4>
 <div class="paragraph">
-<p>Given a valid username and issuer name, returns the base64-encoded TOTP QRCode representation image.<br>
-The TOTP QRCode Image allows the users to easily configure their authenticator app by scanning the QR code, instead of manually entering the secret key.<br>
-This improves user experience and security by simplifying the setup process and reducing the likelihood of input errors.</p>
+<p>Given a valid username, issuer name and the TOTP code parameters, returns true as a result, indicating that the given TOTP code is valid.</p>
 </div>
 <div class="sect4">
 <h5 id="_path_parameters">Path parameters</h5>
@@ -513,6 +511,12 @@ This improves user experience and security by simplifying the setup process and 
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -535,14 +539,14 @@ This improves user experience and security by simplifying the setup process and 
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">qr_code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">issuer</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">issuer</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">valid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
@@ -553,10 +557,10 @@ This improves user experience and security by simplifying the setup process and 
 <h5 id="_example_request">Example request</h5>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v1.0/totp/JohnDoe/qrcode' -i -X POST \
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v1.0/totp/JohnDoe/validate' -i -X POST \
     -H 'Content-Type: application/json' \
     -H 'Accept: application/json' \
-    -d '{"issuer":"iam-site"}'</code></pre>
+    -d '{"issuer":"iam-site","code":"123456"}'</code></pre>
 </div>
 </div>
 </div>
@@ -566,21 +570,20 @@ This improves user experience and security by simplifying the setup process and 
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 705
+Content-Length: 45
 
 {
-  "qr_code" : "iVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQAAAACFI5MzAAABtUlEQVR4Xu2W0WoEMQhFhfxWwF8X/K1Aek/SndmW9i22LyPb3cRTiJqrMzZ/M/vuuOwhD8H+koRZG67flnNmsi0h7KO3cK30y7aG6OhhHm0O+ZNtGYnuoylnUCXRl+N7bUuIPqlcV7LLXUOQRN72TTvnyDbVNLp0ghc7T8JaEAOaH9ZlXkKG59ydJdFTTTYVRPelSxvoZHRCeFX0LEl6NwhDItHF6X9KiE41Hz5wEUhcCjlLdKgSDdTIpnfzEoJCNCgMx9h6rCFdAmzM2M7KRxGRLBAH6kDxO+MCMhlEjiKTi9sBFBDG65JGqqXCCaSEDHpp9ZataY74K4gKGKhvOE8mVF9D6CROJlEU75S3gChXW4pHJ4pFIZQQ+brzxFBbJenetT5KUDwqFNKb15eJdJTEp8iTFbd21/oooY5Iw9Agx18VPU3WLFdPMSbkvp6Ah0ngcDqscXHtzvQowWL1E16pf3nOk/3GpYKSs1bx9iw5SXJ92Evs3ONbrY+S4L50srMw2RVBAdmLyeBbmxqiP+WXBKDJV0QmLl/C39M1S0igEI0ivTNowYPjFcFZ8rM95CHY/5MPgFVjF8KkpBwAAAAASUVORK5CYII=",
-  "issuer" : "iam-site"
+  "issuer" : "iam-site",
+  "valid" : true
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_generate_the_qrcode_image_with_invalid_parameter">Generate the QRCode Image With Invalid Parameter</h4>
+<h4 id="_validate_totp_with_invalid_parameter">Validate TOTP With Invalid Parameter</h4>
 <div class="paragraph">
-<p>When requesting the TOTP QRCode generation through the API, if invalid parameters are provided, the API will respond with "400 Bad Request" error.<br>
-This may happen when the request parameters do not contain the expected value.</p>
+<p>When requesting the TOTP code validate through the API, if an non-existing username parameter is provided, the API will respond with "400 Bad Request" error.<br></p>
 </div>
 <div class="sect4">
 <h5 id="_path_parameters_2">Path parameters</h5>
@@ -639,6 +642,12 @@ This may happen when the request parameters do not contain the expected value.</
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -661,14 +670,14 @@ This may happen when the request parameters do not contain the expected value.</
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">qr_code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">issuer</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">issuer</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">valid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
@@ -679,10 +688,10 @@ This may happen when the request parameters do not contain the expected value.</
 <h5 id="_example_request_2">Example request</h5>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v1.0/totp/JohnDoe/qrcode' -i -X POST \
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v1.0/totp/testuser/validate' -i -X POST \
     -H 'Content-Type: application/json' \
     -H 'Accept: application/json' \
-    -d '{"issuer":"iam-site"}'</code></pre>
+    -d '{"issuer":"iam-site","code":"123456"}'</code></pre>
 </div>
 </div>
 </div>
@@ -692,21 +701,21 @@ This may happen when the request parameters do not contain the expected value.</
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 400 Bad Request
 Content-Type: application/json
-Content-Length: 129
+Content-Length: 130
 
 {
   "status" : 400,
-  "errors" : [ "No MFA type added to the user testuser" ],
-  "timestamp" : "2024-04-13T10:12:03.995283992Z"
+  "errors" : [ "No user found by the username: testuser" ],
+  "timestamp" : "2024-04-13T10:12:03.808613415Z"
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_generate_the_qrcode_image_when_unknown_error_occurs">Generate the QRCode Image When Unknown error occurs</h4>
+<h4 id="_validate_totp_when_unknown_error_occurs">Validate TOTP When Unknown error occurs</h4>
 <div class="paragraph">
-<p>During the process of generating the TOTP QRCode image, if an unexpected or unknown error occurs, the API will return an "unknown error."<br>
+<p>During the process of validating the given TOTP code, if an unexpected or unknown error occurs, the API will return an "unknown error."<br>
 This indicates that the API encountered an issue that could not be precisely identified or categorized within its regular error handling.</p>
 </div>
 <div class="sect4">
@@ -766,6 +775,12 @@ This indicates that the API encountered an issue that could not be precisely ide
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -788,14 +803,14 @@ This indicates that the API encountered an issue that could not be precisely ide
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">qr_code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">issuer</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">issuer</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">valid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
@@ -806,10 +821,10 @@ This indicates that the API encountered an issue that could not be precisely ide
 <h5 id="_example_request_3">Example request</h5>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v1.0/totp/JohnDoe/qrcode' -i -X POST \
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v1.0/totp/JaneDoe/validate' -i -X POST \
     -H 'Content-Type: application/json' \
     -H 'Accept: application/json' \
-    -d '{"issuer":"iam-site"}'</code></pre>
+    -d '{"issuer":"iam-site","code":"123456"}'</code></pre>
 </div>
 </div>
 </div>
@@ -824,7 +839,7 @@ Content-Length: 121
 {
   "status" : 500,
   "errors" : [ "Unexpected error has occurred." ],
-  "timestamp" : "2024-04-13T10:12:04.047816326Z"
+  "timestamp" : "2024-04-13T10:12:03.884641109Z"
 }</code></pre>
 </div>
 </div>
@@ -834,7 +849,7 @@ Content-Length: 121
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-03-30 07:36:06 UTC
+Last updated 2024-04-13 11:09:35 +0100
 </div>
 </div>
 </body>

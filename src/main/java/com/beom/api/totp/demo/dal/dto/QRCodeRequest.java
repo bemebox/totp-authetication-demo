@@ -9,11 +9,8 @@ import jakarta.validation.constraints.NotNull;
  * @author beom
  * @since 2024/03/16
  */
-public record TotpRequest(
-        @NotNull(message = "issuer cannot be null")
+public record QRCodeRequest(
+        @NotNull(message = "issuer must not be null")
         @JsonProperty("issuer")
-        String issuer,
-        @NotNull(message = "code cannot be null")
-        @JsonProperty("code")
-        String code
+        String issuer
 ) {}

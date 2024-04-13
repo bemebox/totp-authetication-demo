@@ -1,0 +1,92 @@
+=== Validate TOTP Code
+
+Thís API endpoint allows to validate a given Time-based One-Time Password (TOTP) code, for a specific user. +
+It takes the username, issuer name and the TOTP code parameters, and returns True if the TOTP is valid, if not return false.
+
+include::{snippets}/validate-totp-tests/given-valid-inputs-when-validate-totp-then-expect-ok/auto-method-path.adoc[]
+
+==== Validate TOTP With Success
+
+Given a valid username, issuer name and the TOTP code parameters, returns true as a result, indicating that the given TOTP code is valid.
+
+
+===== Path parameters
+include::{snippets}/validate-totp-tests/given-valid-inputs-when-validate-totp-then-expect-ok/auto-path-parameters.adoc[]
+
+===== Query parameters
+
+include::{snippets}/validate-totp-tests/given-valid-inputs-when-validate-totp-then-expect-ok/auto-request-parameters.adoc[]
+
+===== Request fields
+
+include::{snippets}/validate-totp-tests/given-valid-inputs-when-validate-totp-then-expect-ok/auto-request-fields.adoc[]
+
+===== Response fields
+
+include::{snippets}/validate-totp-tests/given-valid-inputs-when-validate-totp-then-expect-ok/auto-response-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/validate-totp-tests/given-valid-inputs-when-validate-totp-then-expect-ok/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/validate-totp-tests/given-valid-inputs-when-validate-totp-then-expect-ok/http-response.adoc[]
+
+
+
+==== Validate TOTP With Invalid Parameter
+
+When requesting the TOTP code validate through the API, if an non-existing username parameter is provided, the API will respond with "400 Bad Request" error. +
+
+===== Path parameters
+include::{snippets}/validate-totp-tests/given-invalid-username-when-validate-totp-then-expect-bad-request/auto-path-parameters.adoc[]
+
+===== Query parameters
+
+include::{snippets}/validate-totp-tests/given-invalid-username-when-validate-totp-then-expect-bad-request/auto-request-parameters.adoc[]
+
+===== Request fields
+
+include::{snippets}/validate-totp-tests/given-invalid-username-when-validate-totp-then-expect-bad-request/auto-request-fields.adoc[]
+
+===== Response fields
+
+include::{snippets}/validate-totp-tests/given-invalid-username-when-validate-totp-then-expect-bad-request/auto-response-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/validate-totp-tests/given-invalid-username-when-validate-totp-then-expect-bad-request/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/validate-totp-tests/given-invalid-username-when-validate-totp-then-expect-bad-request/http-response.adoc[]
+
+
+==== Validate TOTP When Unknown error occurs
+
+During the process of validating the given TOTP code, if an unexpected or unknown error occurs, the API will return an "unknown error." +
+This indicates that the API encountered an issue that could not be precisely identified or categorized within its regular error handling.
+
+===== Path parameters
+include::{snippets}/validate-totp-tests/when-totp-validation-exception-occurs-will-validate-totp-then-expect-internal-server-error/auto-path-parameters.adoc[]
+
+===== Query parameters
+
+include::{snippets}/validate-totp-tests/when-totp-validation-exception-occurs-will-validate-totp-then-expect-internal-server-error/auto-request-parameters.adoc[]
+
+===== Request fields
+
+include::{snippets}/validate-totp-tests/when-totp-validation-exception-occurs-will-validate-totp-then-expect-internal-server-error/auto-request-fields.adoc[]
+
+===== Response fields
+
+include::{snippets}/validate-totp-tests/when-totp-validation-exception-occurs-will-validate-totp-then-expect-internal-server-error/auto-response-fields.adoc[]
+
+===== Example request
+
+include::{snippets}/validate-totp-tests/when-totp-validation-exception-occurs-will-validate-totp-then-expect-internal-server-error/curl-request.adoc[]
+
+===== Example response
+
+include::{snippets}/validate-totp-tests/when-totp-validation-exception-occurs-will-validate-totp-then-expect-internal-server-error/http-response.adoc[]
